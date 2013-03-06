@@ -4212,16 +4212,8 @@ Runner.prototype.globals = function(arr){
 
 Runner.prototype.checkGlobals = function(test){
   if (this.ignoreLeaks) return;
-  var ok = this._globals;
-  var globals = this.globalProps();
-  var isNode = process.kill;
-  var leaks;
 
-  // check length - 2 ('errno' and 'location' globals)
-  if (isNode && 1 == ok.length - globals.length) return
-  else if (2 == ok.length - globals.length) return;
-
-  leaks = filterLeaks(ok, globals);
+  var leaks = filterLeaks(this._globals);
   this._globals = this._globals.concat(leaks);
 
   if (leaks.length > 1) {
@@ -4246,7 +4238,7 @@ Runner.prototype.fail = function(test, err){
   if ('string' == typeof err) {
     err = new Error('the string "' + err + '" was thrown, throw an Error :)');
   }
-  
+
   this.emit('fail', test, err);
 };
 
@@ -4575,13 +4567,12 @@ Runner.prototype.run = function(fn){
  * Filter leaks with the given globals flagged as `ok`.
  *
  * @param {Array} ok
- * @param {Array} globals
  * @return {Array}
  * @api private
  */
 
-function filterLeaks(ok, globals) {
-  return filter(globals, function(key){
+function filterLeaks(ok) {
+  return filter(keys(global), function(key){
     var matched = filter(ok, function(ok){
       if (~ok.indexOf('*')) return 0 == key.indexOf(ok.split('*')[0]);
       // Opera and IE expose global variables for HTML element IDs (issue #243)
