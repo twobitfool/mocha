@@ -97,6 +97,19 @@ describe('Runner', function(){
       runner.checkGlobals('im a test');
     })
 
+    it('should detect global leaks even if other globals are whitelisted', function(done){
+      runner.globals(['somethingGood'])
+      runner.checkGlobals();
+      global.somethingBad = 'newGlobal';
+      runner.on('fail', function(test, err){
+        test.should.equal('extra global test');
+        err.message.should.equal('global leak detected: somethingBad');
+        delete global.somethingBad;
+        done();
+      });
+      runner.checkGlobals('extra global test');
+    })
+
     it ('should not fail when a new common global is introduced', function(){
       // verify that the prop isn't enumerable
       delete global.XMLHttpRequest;
